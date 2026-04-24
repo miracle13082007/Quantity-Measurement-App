@@ -1,4 +1,4 @@
-public class UseCase{
+public class UseCase {
 
     enum LengthUnit {
         FEET(1.0),
@@ -39,6 +39,17 @@ public class UseCase{
             return new QuantityLength(converted, targetUnit);
         }
 
+        public QuantityLength add(QuantityLength other) {
+            if (other == null) {
+                throw new IllegalArgumentException();
+            }
+            double base1 = this.unit.toFeet(this.value);
+            double base2 = other.unit.toFeet(other.value);
+            double sumBase = base1 + base2;
+            double result = this.unit.fromFeet(sumBase);
+            return new QuantityLength(result, this.unit);
+        }
+
         @Override
         public boolean equals(Object obj) {
             if (this == obj) {
@@ -57,37 +68,24 @@ public class UseCase{
         }
     }
 
-    public static double convert(double value, LengthUnit source, LengthUnit target) {
-        if (source == null || target == null || !Double.isFinite(value)) {
+    public static QuantityLength add(QuantityLength q1, QuantityLength q2) {
+        if (q1 == null || q2 == null) {
             throw new IllegalArgumentException();
         }
-        double base = source.toFeet(value);
-        return target.fromFeet(base);
+        return q1.add(q2);
     }
 
-    public static double demonstrateLengthConversion(double value, LengthUnit from, LengthUnit to) {
-        return convert(value, from, to);
-    }
-
-    public static double demonstrateLengthConversion(QuantityLength q, LengthUnit to) {
-        return q.convertTo(to).value;
-    }
-
-    public static boolean demonstrateLengthEquality(QuantityLength q1, QuantityLength q2) {
-        return q1.equals(q2);
-    }
-
-    public static boolean demonstrateLengthComparison(double v1, LengthUnit u1, double v2, LengthUnit u2) {
+    public static QuantityLength add(double v1, LengthUnit u1, double v2, LengthUnit u2) {
         QuantityLength q1 = new QuantityLength(v1, u1);
         QuantityLength q2 = new QuantityLength(v2, u2);
-        return q1.equals(q2);
+        return q1.add(q2);
     }
 
     public static void main(String[] args) {
-        System.out.println(convert(1.0, LengthUnit.FEET, LengthUnit.INCHES));
-        System.out.println(convert(3.0, LengthUnit.YARDS, LengthUnit.FEET));
-        System.out.println(convert(36.0, LengthUnit.INCHES, LengthUnit.YARDS));
-        System.out.println(convert(1.0, LengthUnit.CENTIMETERS, LengthUnit.INCHES));
-        System.out.println(convert(0.0, LengthUnit.FEET, LengthUnit.INCHES));
+        QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
+        QuantityLength q2 = new QuantityLength(12.0, LengthUnit.INCHES);
+
+        System.out.println(q1.add(q2));
+        System.out.println(add(12.0, LengthUnit.INCHES, 1.0, LengthUnit.FEET));
     }
 }
