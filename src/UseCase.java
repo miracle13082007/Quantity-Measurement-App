@@ -33,21 +33,23 @@ public class UseCase {
             this.unit = unit;
         }
 
-        public QuantityLength convertTo(LengthUnit targetUnit) {
-            double base = unit.toFeet(value);
-            double converted = targetUnit.fromFeet(base);
-            return new QuantityLength(converted, targetUnit);
+        private double toBase() {
+            return unit.toFeet(value);
         }
 
-        public QuantityLength add(QuantityLength other) {
-            if (other == null) {
+        private static double addBase(double v1Base, double v2Base) {
+            return v1Base + v2Base;
+        }
+
+        public QuantityLength add(QuantityLength other, LengthUnit targetUnit) {
+            if (other == null || targetUnit == null) {
                 throw new IllegalArgumentException();
             }
-            double base1 = this.unit.toFeet(this.value);
-            double base2 = other.unit.toFeet(other.value);
-            double sumBase = base1 + base2;
-            double result = this.unit.fromFeet(sumBase);
-            return new QuantityLength(result, this.unit);
+
+            double sumBase = addBase(this.toBase(), other.toBase());
+            double result = targetUnit.fromFeet(sumBase);
+
+            return new QuantityLength(result, targetUnit);
         }
 
         @Override
@@ -59,7 +61,7 @@ public class UseCase {
                 return false;
             }
             QuantityLength other = (QuantityLength) obj;
-            return Double.compare(unit.toFeet(value), other.unit.toFeet(other.value)) == 0;
+            return Double.compare(this.toBase(), other.toBase()) == 0;
         }
 
         @Override
@@ -68,24 +70,16 @@ public class UseCase {
         }
     }
 
-    public static QuantityLength add(QuantityLength q1, QuantityLength q2) {
-        if (q1 == null || q2 == null) {
-            throw new IllegalArgumentException();
-        }
-        return q1.add(q2);
-    }
-
-    public static QuantityLength add(double v1, LengthUnit u1, double v2, LengthUnit u2) {
-        QuantityLength q1 = new QuantityLength(v1, u1);
-        QuantityLength q2 = new QuantityLength(v2, u2);
-        return q1.add(q2);
+    public static QuantityLength add(QuantityLength q1, QuantityLength q2, LengthUnit targetUnit) {
+        return q1.add(q2, targetUnit);
     }
 
     public static void main(String[] args) {
         QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
         QuantityLength q2 = new QuantityLength(12.0, LengthUnit.INCHES);
 
-        System.out.println(q1.add(q2));
-        System.out.println(add(12.0, LengthUnit.INCHES, 1.0, LengthUnit.FEET));
+        System.out.println(add(q1, q2, LengthUnit.FEET));
+        System.out.println(add(q1, q2, LengthUnit.INCHES));
+        System.out.println(add(q1, q2, LengthUnit.YARDS));
     }
 }
