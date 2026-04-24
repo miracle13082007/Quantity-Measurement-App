@@ -1,10 +1,10 @@
 public class UseCase {
 
-    enum LengthUnit {
+    public enum LengthUnit {
         FEET(1.0),
         INCHES(1.0 / 12.0),
         YARDS(3.0),
-        CENTIMETERS(0.393701 / 12.0);
+        CENTIMETERS(0.0328084);
 
         private final double toFeetFactor;
 
@@ -12,12 +12,12 @@ public class UseCase {
             this.toFeetFactor = toFeetFactor;
         }
 
-        public double toFeet(double value) {
+        public double convertToBaseUnit(double value) {
             return value * toFeetFactor;
         }
 
-        public double fromFeet(double value) {
-            return value / toFeetFactor;
+        public double convertFromBaseUnit(double baseValue) {
+            return baseValue / toFeetFactor;
         }
     }
 
@@ -33,12 +33,15 @@ public class UseCase {
             this.unit = unit;
         }
 
-        private double toBase() {
-            return unit.toFeet(value);
-        }
+        public QuantityLength convertTo(LengthUnit targetUnit) {
+            if (targetUnit == null) {
+                throw new IllegalArgumentException();
+            }
 
-        private static double addBase(double v1Base, double v2Base) {
-            return v1Base + v2Base;
+            double base = unit.convertToBaseUnit(value);
+            double result = targetUnit.convertFromBaseUnit(base);
+
+            return new QuantityLength(result, targetUnit);
         }
 
         public QuantityLength add(QuantityLength other, LengthUnit targetUnit) {
@@ -46,8 +49,11 @@ public class UseCase {
                 throw new IllegalArgumentException();
             }
 
-            double sumBase = addBase(this.toBase(), other.toBase());
-            double result = targetUnit.fromFeet(sumBase);
+            double sumBase =
+                    this.unit.convertToBaseUnit(this.value)
+                            + other.unit.convertToBaseUnit(other.value);
+
+            double result = targetUnit.convertFromBaseUnit(sumBase);
 
             return new QuantityLength(result, targetUnit);
         }
@@ -60,8 +66,13 @@ public class UseCase {
             if (obj == null || getClass() != obj.getClass()) {
                 return false;
             }
+
             QuantityLength other = (QuantityLength) obj;
-            return Double.compare(this.toBase(), other.toBase()) == 0;
+
+            double thisBase = this.unit.convertToBaseUnit(this.value);
+            double otherBase = other.unit.convertToBaseUnit(other.value);
+
+            return Double.compare(thisBase, otherBase) == 0;
         }
 
         @Override
@@ -70,16 +81,13 @@ public class UseCase {
         }
     }
 
-    public static QuantityLength add(QuantityLength q1, QuantityLength q2, LengthUnit targetUnit) {
-        return q1.add(q2, targetUnit);
-    }
-
     public static void main(String[] args) {
         QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
         QuantityLength q2 = new QuantityLength(12.0, LengthUnit.INCHES);
 
-        System.out.println(add(q1, q2, LengthUnit.FEET));
-        System.out.println(add(q1, q2, LengthUnit.INCHES));
-        System.out.println(add(q1, q2, LengthUnit.YARDS));
+        System.out.println(q1.convertTo(LengthUnit.INCHES));
+        System.out.println(q1.add(q2, LengthUnit.FEET));
+        System.out.println(q1.add(q2, LengthUnit.YARDS));
+        System.out.println(q1.equals(q2));
     }
 }
